@@ -1,0 +1,52 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tests & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development databases (Docker uses a named volume instead)
+geoalertner.db
+*.db-shm
+*.db-wal
+
+# Secrets
+.env
+*.env.local
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Large training data files (not needed at runtime)
+ml/ner_disaster_training_data.csv
+ml/batch_risk_output.csv
+ml/batch_risk_output.geojson
+
+# Artifacts dir
+*.zip
+new

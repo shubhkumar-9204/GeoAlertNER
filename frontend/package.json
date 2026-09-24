@@ -1,0 +1,14 @@
+{
+  "name": "geoalertner-frontend",
+  "version": "1.0.0",
+  "description": "AI-Driven Disaster Early Warning & Evacuation Frontend for North Eastern Region",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "start": "npx serve . -l 3000",
+    "preview": "npx serve . -l 3000"
+  },
+  "keywords": ["disaster-management", "landslide-early-warning", "leaflet-gis", "fastapi-frontend"],
+  "author": "GeoAlertNER Team",
+  "license": "MIT"
+}

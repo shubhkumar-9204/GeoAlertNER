@@ -1,0 +1,41 @@
+# render.yaml — GeoAlertNER Render.com Production Deployment
+# Deploys the full stack (FastAPI backend + embedded frontend) as a single web service.
+# Docs: https://render.com/docs/render-yaml-spec
+
+services:
+  - type: web
+    name: geoalertner
+    runtime: python
+    region: singapore          # Closest free-tier region to India (NER)
+    plan: free
+    rootDir: .
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATABASE_URL
+        value: sqlite:////opt/render/project/src/data/geoalertner.db
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true         # Render auto-generates a secure random value
+      - key: SENSOR_INGEST_API_KEY
+        generateValue: true         # Auto-generate a secure sensor API key
+      - key: SMS_GATEWAY_PROVIDER
+        value: MOCK
+      - key: SMS_API_KEY
+        value: ""
+      - key: OPENROUTESERVICE_API_KEY
+        value: ""
+      # CORS: Allow all origins for public free-tier deploy.
+      # For a custom domain, set this to: https://your-custom-domain.com
+      - key: BACKEND_CORS_ORIGINS
+        value: '["*"]'
+    disk:
+      name: geoalertner-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1              # Persistent disk so database survives deploys
+    healthCheckPath: /health  # Render polls this endpoint to verify readiness

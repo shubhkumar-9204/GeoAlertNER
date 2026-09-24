@@ -1,0 +1,20 @@
+{
+  "model_type": "RandomForest Ensemble (Pure NumPy)",
+  "features": [
+    "slope_degrees",
+    "elevation_m",
+    "rainfall_24h_mm",
+    "rain_rate_current_mm_hr",
+    "soil_moisture_m3_m3",
+    "ndvi_vegetation",
+    "dist_to_drainage_m",
+    "lithology_code",
+    "tilt_rate_deg_day"
+  ],
+  "metrics": {
+    "regressor_mae": 3.663,
+    "regressor_r2": 0.9414,
+    "classifier_accuracy": 0.8433
+  },
+  "training_samples": 3000
+}

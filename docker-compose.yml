@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  # ─── GeoAlertNER Backend API ─────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: geoalertner_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist SQLite database across container restarts
+      - geoalert_db:/app/data
+      # Mount ML model directory so weights are shareable / replaceable
+      - ./ml:/app/ml:ro
+    environment:
+      - DATABASE_URL=sqlite:////app/data/geoalertner.db
+      - DEBUG=false
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production-please}
+      - OPENROUTESERVICE_API_KEY=${OPENROUTESERVICE_API_KEY:-}
+      - SMS_GATEWAY_PROVIDER=${SMS_GATEWAY_PROVIDER:-MOCK}
+      - SMS_API_KEY=${SMS_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - geoalert_net
+
+  # ─── Nginx Reverse Proxy (Production) ────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: geoalertner_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - geoalert_net
+    profiles:
+      - production   # only started when: docker compose --profile production up
+
+volumes:
+  geoalert_db:
+    name: geoalertner_database
+
+networks:
+  geoalert_net:
+    name: geoalertner_network
+    driver: bridge

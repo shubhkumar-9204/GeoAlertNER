@@ -1,0 +1,4 @@
+# Root requirements — includes all project dependencies
+# Install with: pip install -r requirements.txt
+
+-r backend/requirements.txt

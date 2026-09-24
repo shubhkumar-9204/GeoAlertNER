@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoAlertNER | AI-Driven Disaster Early Warning & Evacuation System</title>
+  <meta name="description"
+    content="Real-time environmental risk scoring, hazard-aware evacuation routing, and IoT telemetry for the North Eastern Region hilly terrain .">
+
+  <!-- PWA Web App Manifest & Metadata -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0F172A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GeoAlertNER">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <!-- Leaflet GIS Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js for Forecasts & Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Modern Styling -->
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+
+<body>
+
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">⛰️</div>
+        <div>
+          <div class="brand-title">GeoAlertNER</div>
+          <div class="brand-badge">NER Platform</div>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-btn active" data-view="dashboard">
+          <span class="icon">📊</span>
+          <span data-i18n="nav_dashboard">Live Dashboard</span>
+        </button>
+        <button class="nav-btn" data-view="map">
+          <span class="icon">🗺️</span>
+          <span data-i18n="nav_map">Disaster Risk Map</span>
+        </button>
+        <button class="nav-btn" data-view="evacuation">
+          <span class="icon">🧭</span>
+          <span data-i18n="nav_evacuation">Evacuation Routing</span>
+        </button>
+        <button class="nav-btn" data-view="reports">
+          <span class="icon">📢</span>
+          <span data-i18n="nav_reports">Citizen Reports</span>
+          <span id="offline-queue-badge" class="badge badge-warning text-xs hidden">0</span>
+        </button>
+        <button class="nav-btn" data-view="simulator" disabled title="IoT Sensor Integration - Coming Soon" style="opacity:0.45; cursor:not-allowed;">
+          <span class="icon">📡</span>
+          <span data-i18n="nav_simulator">IoT Sensors</span>
+          <span class="badge badge-outline text-xs" style="margin-left:auto; font-size:9px; padding:1px 5px;">Soon</span>
+        </button>
+        <button class="nav-btn" data-view="helplines">
+          <span class="icon">📞</span>
+          <span data-i18n="nav_helplines">Emergency Helplines</span>
+        </button>
+        <button class="nav-btn" data-view="calculator">
+          <span class="icon">🧠</span>
+          <span data-i18n="nav_calculator">AI Risk Engine</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div id="backend-status-pill" class="status-pill simulation">
+          <span class="pulse-dot yellow"></span> Connecting Backend...
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+
+      <!-- Top Header -->
+      <header class="top-header">
+        <div>
+          <h2 data-i18n="platform_title">Disaster Monitoring Platform</h2>
+          <p data-i18n="platform_subtitle">North Eastern Region (NER) Terrain & Slope Hazard Early Warning</p>
+        </div>
+
+        <div class="header-actions">
+          <!-- Multilingual Regional Language Switcher -->
+          <div id="language-selector-mount"></div>
+
+          <!-- Regional Voice Alert TTS -->
+          <button id="btn-voice-alert" class="btn-voice-alert" title="Audio Alert Broadcast in your regional language">
+            <span data-i18n="voice_alert_btn">🔊 Voice Alert</span>
+          </button>
+
+          <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+            <input type="checkbox" id="sound-alert-toggle">
+            <span data-i18n="siren_toggle">🚨 Siren Sound</span>
+          </label>
+
+          <button id="btn-sync-offline" class="btn btn-sm btn-outline-primary" disabled>
+            <span data-i18n="sync_offline">🔄 Sync Offline Queue</span>
+          </button>
+
+          <!-- User Authentication Profile & Role Badge -->
+          <div id="auth-header-container" class="auth-header-container">
+            <button id="btn-open-auth" class="btn btn-sm btn-outline-cyan">
+              <span id="auth-btn-icon">👤</span>
+              <span id="auth-btn-label">Sign In / Roles</span>
+            </button>
+            <div id="user-badge" class="user-badge hidden">
+              <span id="user-role-badge" class="badge-role role-citizen">Citizen</span>
+              <span id="user-name-label" class="user-name-text">Guest</span>
+              <button id="btn-logout" class="btn-icon-xs" title="Sign Out">✕</button>
+            </div>
+          </div>
+
+          <!-- High-Impact SOS Emergency Trigger -->
+          <button id="btn-header-sos" class="btn btn-sm btn-sos pulse-glow-red">
+            <span data-i18n="sos_emergency">🚨 SOS EMERGENCY</span>
+          </button>
+        </div>
+      </header>
+
+
+      <!-- VIEW 1: DASHBOARD (Default) -->
+      <section id="view-dashboard" class="view-panel active">
+        <!-- 4 Top KPI Stat Cards -->
+        <div class="stats-grid">
+          <!-- KPI 1 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap">⚠️</div>
+            <div class="stat-label" data-i18n="kpi_overall_risk">Overall Terrain Risk</div>
+            <div class="stat-value text-red-400" id="kpi-overall-risk">78%</div>
+            <div class="stat-footer">
+              <span class="badge badge-high" id="kpi-risk-level">HIGH</span>
+              <span class="stat-status" data-i18n="kpi_multizone">Multi-zone average</span>
+            </div>
+          </div>
+
+          <!-- KPI 2 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap">🌧️</div>
+            <div class="stat-label" data-i18n="kpi_rainfall">24h Rainfall</div>
+            <div class="stat-value text-sky-400" id="kpi-rainfall">86 mm</div>
+            <div class="stat-footer">
+              <span class="stat-status" data-i18n="kpi_radar">IMD Radar feed</span>
+              <span class="text-xs text-slate-400">Guwahati-Shillong</span>
+            </div>
+          </div>
+
+          <!-- KPI 3: Soil Moisture Saturation -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap">💧</div>
+            <div class="stat-label">Soil Saturation</div>
+            <div class="stat-value text-emerald-400" id="kpi-soil-moisture">48%</div>
+            <div class="stat-footer">
+              <span class="badge badge-warning">Ground Saturation</span>
+              <span class="stat-status">0-7cm Topsoil</span>
+            </div>
+          </div>
+
+          <!-- KPI 4: Active Monitored Alerts -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap">🚨</div>
+            <div class="stat-label">Active Hazard Alerts</div>
+            <div class="stat-value text-amber-400" id="kpi-active-alerts">04</div>
+            <div class="stat-footer">
+              <span class="badge badge-danger text-xs font-bold" id="kpi-critical-alerts">2 Critical</span>
+              <span class="stat-status">NER Monitored</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Main Grid: Live GIS Map + Active Alerts Drawer -->
+        <div class="dashboard-main-grid">
+          <!-- GIS Map Card -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span>🗺️</span>
+                <span>Live Disaster Risk & Terrain Map</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="badge badge-outline text-xs">GeoJSON Layers Active</span>
+              </div>
+            </div>
+            <div id="map-container" class="map-container"></div>
+          </div>
+
+          <!-- Active Alerts & Live Forecast Card -->
+          <div class="flex flex-col gap-6">
+            <!-- Active Alerts -->
+            <div class="panel-card flex-1">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>🚨</span>
+                  <span>Active Terrain Alerts</span>
+                </div>
+              </div>
+              <div id="active-alerts-list" class="alerts-list">
+                <!-- Injected dynamically by app.js -->
+              </div>
+            </div>
+
+            <!-- Weather Widget -->
+            <div class="panel-card p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-sm flex items-center gap-2">
+                  <span>🌦️</span>
+                  <span>Precipitation & Soil Forecast</span>
+                </h4>
+                <span class="text-xs text-slate-400" id="weather-condition">Loading...</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  <div class="text-xs text-slate-400">Temp</div>
+                  <strong class="text-sm" id="weather-temp">--°C</strong>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  <div class="text-xs text-slate-400">Humidity</div>
+                  <strong class="text-sm" id="weather-humidity">--%</strong>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  <div class="text-xs text-slate-400">Rain Rate</div>
+                  <strong class="text-sm text-sky-400" id="weather-rate">-- mm/h</strong>
+                </div>
+              </div>
+
+              <div style="height: 140px; position: relative;">
+                <canvas id="rainfall-forecast-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: FULL MAP VIEW -->
+      <section id="view-map" class="view-panel">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🗺️</span>
+              <span>Full-Screen GIS Spatial Hazard Analysis</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-xs btn-outline-primary" onclick="window.geoMap.refreshAllLayers()">
+                🔄 Refresh Layers
+              </button>
+            </div>
+          </div>
+          <div style="padding: 16px;">
+            <p class="text-xs text-slate-400 mb-2">
+              Explore hazard micro-zones, live IoT sensors, safe shelters, and ground telemetry. Click on any polygon or
+              shelter icon to view live parameters and calculate escape corridors.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: EVACUATION ROUTING -->
+      <section id="view-evacuation" class="view-panel">
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Route Request Form -->
+          <div class="panel-card p-6">
+            <div class="panel-title mb-4">
+              <span>🧭</span>
+              <span>Hazard-Aware Evacuation Corridor Planner</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-6">
+              Dynamically computes the safest escape corridor bypassing active red landslide zones and flooded valley
+              choke points.
+            </p>
+
+            <form id="evacuation-form">
+              <div class="form-group">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="form-label mb-0">Current User GPS Coordinates</label>
+                  <div class="flex gap-2">
+                    <button type="button" id="btn-auto-gps" class="btn btn-xs btn-outline-primary">
+                      📍 Use Device GPS
+                    </button>
+                    <button type="button" id="btn-pick-location" class="btn btn-xs btn-outline-primary">
+                      🗺️ Pick on Map
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <input type="number" step="0.0001" id="evac-origin-lat" class="form-input"
+                    placeholder="Latitude (e.g. 26.1350)" value="26.1350" required>
+                  <input type="number" step="0.0001" id="evac-origin-lon" class="form-input"
+                    placeholder="Longitude (e.g. 91.8250)" value="91.8250" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Destination Safe Shelter</label>
+                <select id="evac-target-shelter" class="form-select">
+                  <option value="">-- Nearest Safe Shelter (Auto-Optimized) --</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 form-group">
+                <div>
+                  <label class="form-label">Transport Preference</label>
+                  <select id="evac-transport-mode" class="form-select">
+                    <option value="4X4_VEHICLE">🚙 4x4 Offroad / Emergency Vehicle</option>
+                    <option value="FOOT_SAFEST_TRAIL">🚶 Walking / Evacuation Footpath</option>
+                    <option value="EMERGENCY_BUS">🚌 Evacuation Transit Bus</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label">Hazard Avoidance</label>
+                  <div class="flex items-center gap-2 mt-2">
+                    <input type="checkbox" id="evac-avoid-hazards" checked>
+                    <label for="evac-avoid-hazards" class="text-xs text-slate-300">Reroute around Critical Red
+                      Zones</label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-compute-route" class="btn btn-primary w-full mt-4">
+                🚀 Calculate Safe Evacuation Corridor
+              </button>
+            </form>
+          </div>
+
+          <!-- Route Results Card -->
+          <div id="evacuation-results" class="panel-card p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="panel-title">
+                <span>🏁</span>
+                <span>Optimized Escape Corridor</span>
+              </h3>
+              <span class="badge badge-low" id="evac-res-safety-score">94% Safety</span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+              <div class="text-xs text-slate-400">Designated Safe Haven</div>
+              <h4 class="text-lg font-bold text-white mt-1" id="evac-res-shelter">--</h4>
+              <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
+                <div>Distance: <strong class="text-sky-400" id="evac-res-distance">-- km</strong></div>
+                <div>ETA: <strong class="text-sky-400" id="evac-res-eta">-- mins</strong></div>
+              </div>
+              <div class="mt-2 text-xs text-emerald-400" id="evac-res-status">--</div>
+            </div>
+
+            <h4 class="font-semibold text-sm mb-2 text-slate-300">Turn-by-Turn Navigation Guide:</h4>
+            <ul id="evac-turn-by-turn-list" class="space-y-3 mb-6">
+              <!-- Steps injected dynamically -->
+            </ul>
+
+            <h4 class="font-semibold text-xs mb-2 text-slate-400">Emergency Dispatch Hotlines:</h4>
+            <div id="evac-res-contacts" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: CITIZEN GROUND REPORTS & OFFLINE PWA -->
+      <section id="view-reports" class="view-panel">
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Submission Form -->
+          <div class="panel-card p-6">
+            <div class="panel-title mb-3">
+              <span>📢</span>
+              <span>Submit Ground Telemetry & Hazard Report</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Works 100% offline! In zero-connectivity valleys, reports are safely saved to local device cache and
+              automatically synced when signal is restored.
+            </p>
+
+            <form id="citizen-report-form">
+              <div class="grid grid-cols-2 gap-3 form-group">
+                <div>
+                  <label class="form-label">Hazard Category</label>
+                  <select id="report-category" class="form-select">
+                    <option value="LANDSLIDE_BLOCKAGE">⚠️ Landslide / Mudslip Blockage</option>
+                    <option value="ROAD_CRACK">🚧 Road / Hill Slope Crack</option>
+                    <option value="RIVER_OVERFLOW">🌊 River / Culvert Overflow</option>
+                    <option value="TREE_FALL">🌲 Fallen Tree / Power Lines</option>
+                    <option value="BRIDGE_DAMAGE">🌉 Bridge / Culvert Structural Damage</option>
+                    <option value="FLASH_FLOOD">⚡ Flash Flood Inundation</option>
+                    <option value="STRANDED_CITIZENS">🆘 Stranded Citizens Requiring Rescue</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label">Severity Scale (1 to 5)</label>
+                  <select id="report-severity" class="form-select">
+                    <option value="5">🚨 5 - Critical Danger / Immediate Threat</option>
+                    <option value="4">⚠️ 4 - Major Hazard / Road Blocked</option>
+                    <option value="3" selected>🟡 3 - Moderate Hazard</option>
+                    <option value="2">🟢 2 - Minor Concern</option>
+                    <option value="1">ℹ️ 1 - Advisory Observation</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description & Observations</label>
+                <textarea id="report-desc" class="form-textarea" rows="3"
+                  placeholder="Describe landslide location, boulder movements, or flooded sections..."
+                  required></textarea>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 form-group">
+                <div>
+                  <label class="form-label">Latitude</label>
+                  <input type="number" step="0.0001" id="report-lat" class="form-input" value="26.1445" required>
+                </div>
+                <div>
+                  <label class="form-label">Longitude</label>
+                  <input type="number" step="0.0001" id="report-lon" class="form-input" value="91.7362" required>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 form-group">
+                <div>
+                  <label class="form-label">State</label>
+                  <input type="text" id="report-state" class="form-input" value="Assam" required>
+                </div>
+                <div>
+                  <label class="form-label">District</label>
+                  <input type="text" id="report-district" class="form-input" value="Kamrup Metropolitan" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Photo URL (Optional)</label>
+                <input type="url" id="report-image-url" class="form-input"
+                  placeholder="https://images.unsplash.com/...">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 form-group">
+                <div>
+                  <label class="form-label">Reporter Name</label>
+                  <input type="text" id="report-name" class="form-input" placeholder="Your Name or Volunteer ID">
+                </div>
+                <div>
+                  <label class="form-label">Phone Number</label>
+                  <input type="tel" id="report-phone" class="form-input" placeholder="+91 98765 43210">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-full mt-2">
+                📤 Submit Hazard Report
+              </button>
+            </form>
+          </div>
+
+          <!-- Crowd Reports Feed -->
+          <div class="panel-card p-6">
+            <div class="panel-title mb-4">
+              <span>📋</span>
+              <span>Verified Field Telemetry Feed</span>
+            </div>
+            <div id="citizen-reports-feed" class="max-h-[600px] overflow-y-auto">
+              <!-- Reports injected dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: IOT SENSORS & SIMULATOR CONTROLLER -->
+      <section id="view-simulator" class="view-panel">
+        <div class="panel-card p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="panel-title">
+                <span>📡</span>
+                <span>Hardware IoT Simulator Control Center</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">
+                Simulate real-time sensor ingestion (ESP32 / LoRaWAN nodes) to test live warning thresholds and
+                automated emergency responses.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-slate-400">Current Scenario:</span>
+              <span id="sim-current-scenario" class="badge font-mono badge-warning">MONSOON_SURGE</span>
+            </div>
+          </div>
+
+          <!-- Scenario Trigger Buttons -->
+          <div class="grid grid-cols-4 gap-3 mb-6">
+            <button class="btn btn-outline-primary btn-scenario" data-scenario="NORMAL">
+              ☀️ Normal Weather
+            </button>
+            <button class="btn btn-warning btn-scenario" data-scenario="MONSOON_SURGE">
+              🌧️ Monsoon Surge
+            </button>
+            <button class="btn btn-danger btn-scenario" data-scenario="LANDSLIDE_IMMINENT">
+              🚨 Landslide Imminent
+            </button>
+            <button class="btn btn-danger btn-scenario" data-scenario="CLOUDBURST_FLOOD">
+              🌊 Cloudburst Flash Flood
+            </button>
+          </div>
+
+          <div class="flex items-center gap-4 pt-4 border-t border-slate-800">
+            <button id="btn-sim-tick" class="btn btn-primary">
+              ⚡ Trigger 1 Simulation Tick
+            </button>
+            <button id="btn-sim-auto-toggle" class="btn btn-outline-primary">
+              ▶️ Start Live Auto Sim (5s)
+            </button>
+          </div>
+        </div>
+
+        <!-- Sensors Telemetry Data Table -->
+        <div class="panel-card overflow-hidden">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📊</span>
+              <span>Ground Sensor Node Telemetry</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Node Code</th>
+                  <th>Location & District</th>
+                  <th>Sensor Type</th>
+                  <th>Current Reading</th>
+                  <th>Threshold Limits</th>
+                  <th>Battery</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="sensors-table-body">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 6: EMERGENCY HELPLINES -->
+      <section id="view-helplines" class="view-panel">
+        <div class="panel-card p-6 mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="panel-title">
+                <span>📞</span>
+                <span>North Eastern Disaster Helpline Directory</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">Verified 24x7 hotlines for SDMA, DDMA, NDRF battalions, and
+                National 112 ERSS.</p>
+            </div>
+
+            <div style="width: 240px;">
+              <select id="helpline-state-select" class="form-select">
+                <option value="Assam">Assam</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Manipur">Manipur</option>
+                <option value="All">All States / National</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="helplines-grid" class="grid grid-cols-3 gap-6">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- VIEW 7: AI & ML HAZARD LAB -->
+      <section id="view-calculator" class="view-panel">
+        <div class="panel-card p-6 mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="panel-title">
+                <span>🧠</span>
+                <span>AI & Machine Learning Multi-Hazard Lab</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">
+                Trained Random Forest & Gradient Ensemble evaluating 9 geological, hydrological & meteorological
+                parameters for the North Eastern Region.
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" class="btn btn-xs btn-outline-primary preset-btn" data-preset="normal">🟢
+                Normal</button>
+              <button type="button" class="btn btn-xs btn-outline-primary preset-btn" data-preset="shillong">⚠️ Shillong
+                Landslide</button>
+              <button type="button" class="btn btn-xs btn-outline-primary preset-btn" data-preset="guwahati">🌊 Guwahati
+                Flood</button>
+              <button type="button" class="btn btn-xs btn-outline-primary preset-btn" data-preset="sikkim">🚨 Sikkim
+                Surge</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+          <!-- ML Parameter Form -->
+          <div class="panel-card p-6">
+            <h4 class="font-bold text-sm text-slate-200 mb-4 flex items-center justify-between">
+              <span>🎛️ Field Telemetry Parameters</span>
+              <span class="badge badge-outline text-xs">9 Live Features</span>
+            </h4>
+
+            <form id="risk-calc-form" class="space-y-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="form-group">
+                  <label class="form-label text-xs">Slope Angle (°)</label>
+                  <input type="number" step="0.1" id="calc-slope" class="form-input text-sm" value="38.5" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs">24h Rain (mm)</label>
+                  <input type="number" step="0.1" id="calc-rainfall" class="form-input text-sm" value="140.0" required>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="form-group">
+                  <label class="form-label text-xs">Soil Saturation (m³/m³)</label>
+                  <input type="number" step="0.01" id="calc-moisture" class="form-input text-sm" value="0.55" min="0.1"
+                    max="0.7" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs">Rain Rate (mm/hr)</label>
+                  <input type="number" step="0.1" id="calc-rain-rate" class="form-input text-sm" value="28.0">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="form-group">
+                  <label class="form-label text-xs">Elevation (m)</label>
+                  <input type="number" step="10" id="calc-elev" class="form-input text-sm" value="1250">
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs">NDVI Vegetation</label>
+                  <input type="number" step="0.05" id="calc-ndvi" class="form-input text-sm" value="0.35" min="0.05"
+                    max="0.9">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="form-group">
+                  <label class="form-label text-xs">Dist to Drainage (m)</label>
+                  <input type="number" step="10" id="calc-drain" class="form-input text-sm" value="120">
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs">Ground Tilt Rate (°/day)</label>
+                  <input type="number" step="0.05" id="calc-tilt" class="form-input text-sm" value="0.85">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label text-xs">Rock Lithology / Geology</label>
+                <select id="calc-litho" class="form-select text-sm">
+                  <option value="1">Alluvium / Valley Soil (Code 1)</option>
+                  <option value="2">Hard Sandstone / Gneiss (Code 2)</option>
+                  <option value="3" selected>Weathered Sedimentary (Code 3)</option>
+                  <option value="4">Friable Shale / Siltstone (Code 4)</option>
+                  <option value="5">Highly Fractured Fault Zone (Code 5)</option>
+                </select>
+              </div>
+
+              <button type="submit" id="btn-calc-assess" class="btn btn-primary w-full mt-2">
+                ⚡ Run ML Model Inference
+              </button>
+            </form>
+          </div>
+
+          <!-- ML Prediction Results -->
+          <div id="calc-results" class="panel-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="panel-title text-sm">
+                <span>📊</span>
+                <span>AI Ensemble Inference Report</span>
+              </h3>
+              <span id="calc-source-badge" class="badge badge-primary text-xs">RANDOM_FOREST</span>
+            </div>
+
+            <!-- Risk Score Display -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4 text-center">
+              <div class="text-xs text-slate-400">Predicted Hazard Probability</div>
+              <div class="text-4xl font-extrabold text-red-400 my-2" id="calc-res-score">68.0%</div>
+              <div class="flex justify-center items-center gap-2 mb-2">
+                <span class="badge badge-danger text-xs font-bold" id="calc-res-level">HIGH RISK</span>
+                <span class="badge badge-warning text-xs" id="calc-res-hazard">LANDSLIDE</span>
+              </div>
+              <div class="text-xs font-medium text-amber-300" id="calc-res-evac">⚠️ Evacuation Preparation Advised</div>
+            </div>
+
+            <!-- Multi-Class Probability Distribution Bars -->
+            <div class="mb-4">
+              <div class="text-xs font-semibold text-slate-300 mb-2">Model Confidence Distribution:</div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Critical Risk</span>
+                  <span id="prob-val-crit" class="font-bold text-red-400">16%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div id="prob-bar-crit" class="bg-red-500 h-2 rounded-full" style="width: 16%"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>High Risk</span>
+                  <span id="prob-val-high" class="font-bold text-amber-400">84%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div id="prob-bar-high" class="bg-amber-500 h-2 rounded-full" style="width: 84%"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Moderate Risk</span>
+                  <span id="prob-val-mod" class="font-bold text-yellow-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div id="prob-bar-mod" class="bg-yellow-400 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Low Risk</span>
+                  <span id="prob-val-low" class="font-bold text-emerald-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div id="prob-bar-low" class="bg-emerald-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mitigation Recommendations -->
+            <div>
+              <h4 class="font-semibold text-xs text-slate-300 mb-2">Field Directives:</h4>
+              <ul id="calc-res-actions" class="text-xs text-slate-400 space-y-1">
+                <li>• Pre-position 4x4 rescue vehicles near active slope cuts</li>
+                <li>• Monitor IMD radar accumulation for rainfall surge</li>
+                <li>• Alert local Disaster Response Force & Shelter in-charge</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Floating Quick SOS Button (Bottom Right) -->
+  <button id="btn-floating-sos" class="floating-sos-btn pulse-glow-red" title="Trigger Instant Emergency SOS">
+    <span class="sos-icon">🚨</span>
+    <span class="sos-text">SOS</span>
+  </button>
+
+  <!-- SOS Emergency Distress Modal -->
+  <div id="sos-modal" class="modal-backdrop hidden">
+    <div class="sos-modal-card">
+      <div class="sos-modal-header">
+        <div class="flex items-center gap-3">
+          <div class="sos-badge-icon">🚨</div>
+          <div>
+            <h3 class="text-xl font-black text-red-500">EMERGENCY SOS DISTRESS</h3>
+            <p class="text-xs text-slate-300">Instant Alert to SDRF, NDRF & District Disaster Control</p>
+          </div>
+        </div>
+        <button id="btn-close-sos" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="sos-modal-body">
+        <div class="sos-strobe-alert">
+          <span>⚠️ EMERGENCY DISTRESS PROTOCOL ACTIVE</span>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+          <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
+            <span>Your Live GPS Coordinates:</span>
+            <span id="sos-gps-status" class="text-emerald-400 font-semibold">Acquiring GPS...</span>
+          </div>
+          <div class="text-lg font-mono font-bold text-sky-400" id="sos-coordinates-display">
+            Lat: 26.1445, Lon: 91.7362
+          </div>
+          <div class="text-xs text-slate-400 mt-1" id="sos-location-name">
+            Region: Kamrup Metropolitan / Guwahati Hilly Zone (Assam)
+          </div>
+        </div>
+
+        <div class="space-y-3 mb-5">
+          <button id="btn-sos-broadcast"
+            class="btn btn-danger w-full font-bold py-3 text-base shadow-lg flex items-center justify-center gap-2">
+            📡 BROADCAST DISTRESS BEACON TO SDRF NOW
+          </button>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-sos-shelter-route" class="btn btn-outline-primary w-full text-xs">
+              🧭 Instant Route to Closest Shelter
+            </button>
+            <a id="btn-sos-whatsapp" href="#" target="_blank"
+              class="btn btn-warning w-full text-xs flex items-center justify-center gap-1">
+              💬 Share GPS on WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- 1-Click Speed Dial Contacts -->
+        <h4 class="font-bold text-xs text-slate-300 uppercase tracking-wider mb-2">Immediate Speed Dial:</h4>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <a href="tel:112"
+            class="sos-dial-card bg-red-950/60 border border-red-800 p-3 rounded-lg flex items-center justify-between text-white hover:bg-red-900">
+            <div>
+              <div class="text-xs text-red-300 font-semibold">National Emergency</div>
+              <strong class="text-lg">📞 112</strong>
+            </div>
+            <span class="badge badge-critical">24x7</span>
+          </a>
+          <a href="tel:1070"
+            class="sos-dial-card bg-amber-950/60 border border-amber-800 p-3 rounded-lg flex items-center justify-between text-white hover:bg-amber-900">
+            <div>
+              <div class="text-xs text-amber-300 font-semibold">State Disaster SDMA</div>
+              <strong class="text-lg">📞 1070</strong>
+            </div>
+            <span class="badge badge-warning">24x7</span>
+          </a>
+          <a href="tel:1077"
+            class="sos-dial-card bg-slate-900 border border-slate-800 p-3 rounded-lg flex items-center justify-between text-white hover:bg-slate-800">
+            <div>
+              <div class="text-xs text-slate-400 font-semibold">District DDMA</div>
+              <strong class="text-lg">📞 1077</strong>
+            </div>
+            <span class="badge badge-outline">Local</span>
+          </a>
+          <a href="tel:0361-2849005"
+            class="sos-dial-card bg-slate-900 border border-slate-800 p-3 rounded-lg flex items-center justify-between text-white hover:bg-slate-800">
+            <div>
+              <div class="text-xs text-slate-400 font-semibold">NDRF 1st Bn HQ</div>
+              <strong class="text-sm">📞 0361-2849005</strong>
+            </div>
+            <span class="badge badge-outline">Rescue</span>
+          </a>
+        </div>
+
+        <div id="sos-beacon-status" class="text-xs text-center text-slate-400">
+          Pressing broadcast instantly records your location in the central SDRF control database.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Authentication Modal -->
+  <div id="auth-modal" class="modal-backdrop hidden">
+    <div class="auth-modal-card">
+      <div class="auth-modal-header">
+        <div class="flex items-center gap-3">
+          <div class="text-2xl">🔐</div>
+          <div>
+            <h3 class="text-base font-bold text-white">GeoAlertNER Authentication</h3>
+            <p class="text-xs text-slate-400">Role-Based Access Control for Citizens, Responders & Admins</p>
+          </div>
+        </div>
+        <button id="btn-close-auth" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="auth-modal-body">
+        <!-- 1-Click Demo Quick Switch -->
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">⚡ 1-Click Demo Quick Login:</div>
+        <div class="demo-quick-login-grid">
+          <button type="button" class="demo-role-btn" data-demo="citizen">
+            <span class="demo-role-icon">🧑‍🌾</span>
+            <span class="demo-role-name">Citizen</span>
+            <span class="demo-role-desc">Assam Resident</span>
+          </button>
+          <button type="button" class="demo-role-btn" data-demo="officer">
+            <span class="demo-role-icon">🛡️</span>
+            <span class="demo-role-name">Field Officer</span>
+            <span class="demo-role-desc">SDRF Inspector</span>
+          </button>
+          <button type="button" class="demo-role-btn" data-demo="admin">
+            <span class="demo-role-icon">👑</span>
+            <span class="demo-role-name">Admin</span>
+            <span class="demo-role-desc">Disaster HQ</span>
+          </button>
+        </div>
+
+        <!-- Auth Tabs: Sign In / Create Account -->
+        <div class="auth-tabs">
+          <button type="button" id="tab-auth-login" class="auth-tab-btn active">Sign In</button>
+          <button type="button" id="tab-auth-register" class="auth-tab-btn">Register</button>
+        </div>
+
+        <div id="auth-alert-box" class="auth-alert-box"></div>
+
+        <!-- Login Form -->
+        <form id="form-auth-login" class="space-y-4">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-input" placeholder="e.g. officer@geoalertner.in" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+          </div>
+          <button type="submit" id="btn-submit-login" class="btn btn-outline-cyan w-full justify-center py-2">
+            Sign In to GeoAlertNER
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="form-auth-register" class="space-y-3 hidden">
+          <div class="form-group">
+            <label class="form-label" for="reg-fullname">Full Name</label>
+            <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Pranab Gogoi" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" class="form-input" placeholder="e.g. pranab@assam.gov.in" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Password (min 6 characters)</label>
+            <input type="password" id="reg-password" class="form-input" placeholder="Create secure password" required minlength="6" autocomplete="new-password">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label" for="reg-role">Role</label>
+              <select id="reg-role" class="form-select">
+                <option value="CITIZEN">Citizen</option>
+                <option value="FIELD_OFFICER">Field Officer</option>
+                <option value="ADMIN">Disaster Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reg-state">State (NER)</label>
+              <select id="reg-state" class="form-select">
+                <option value="Assam">Assam</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Tripura">Tripura</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" id="btn-submit-register" class="btn btn-outline-primary w-full justify-center py-2">
+            Create Account & Get Token
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toasts Container -->
+  <div id="toast-container"></div>
+
+
+  <!-- Consolidated Application Bundle -->
+  <script src="bundle.js?v=5"></script>
+</body>
+
+</html>

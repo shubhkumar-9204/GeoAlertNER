@@ -1,0 +1,203 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.662,
+          26.148
+        ]
+      },
+      "properties": {
+        "name": "Guwahati_Jalukbari_Hills",
+        "predicted_risk_score_pct": 47.4,
+        "predicted_risk_category": "MODERATE",
+        "evacuation_advised": false,
+        "class_probabilities": {
+          "CRITICAL": 0.0,
+          "HIGH": 0.32,
+          "LOW": 0.04,
+          "MODERATE": 0.64
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.81,
+          26.115
+        ]
+      },
+      "properties": {
+        "name": "Guwahati_Khanapara_Slopes",
+        "predicted_risk_score_pct": 55.6,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.08,
+          "HIGH": 0.56,
+          "LOW": 0.04,
+          "MODERATE": 0.32
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.905,
+          25.562
+        ]
+      },
+      "properties": {
+        "name": "Shillong_Nongthymmai_Ridge",
+        "predicted_risk_score_pct": 68.0,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.12,
+          "HIGH": 0.68,
+          "LOW": 0.0,
+          "MODERATE": 0.2
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.75,
+          25.32
+        ]
+      },
+      "properties": {
+        "name": "Cherrapunji_Mawkdok_Gorge",
+        "predicted_risk_score_pct": 91.0,
+        "predicted_risk_category": "CRITICAL",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.72,
+          "HIGH": 0.28,
+          "LOW": 0.0,
+          "MODERATE": 0.0
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.602,
+          27.321
+        ]
+      },
+      "properties": {
+        "name": "Gangtok_Deorali_Slopes",
+        "predicted_risk_score_pct": 70.5,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.08,
+          "HIGH": 0.88,
+          "LOW": 0.0,
+          "MODERATE": 0.04
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          94.102,
+          25.668
+        ]
+      },
+      "properties": {
+        "name": "Kohima_Phoolbari_Cut",
+        "predicted_risk_score_pct": 63.2,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.04,
+          "HIGH": 0.76,
+          "LOW": 0.0,
+          "MODERATE": 0.2
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.618,
+          27.092
+        ]
+      },
+      "properties": {
+        "name": "Itanagar_Ganga_Lake_Ridge",
+        "predicted_risk_score_pct": 60.0,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.08,
+          "HIGH": 0.68,
+          "LOW": 0.0,
+          "MODERATE": 0.24
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.708,
+          23.742
+        ]
+      },
+      "properties": {
+        "name": "Aizawl_Hunthar_Veng",
+        "predicted_risk_score_pct": 66.7,
+        "predicted_risk_category": "HIGH",
+        "evacuation_advised": true,
+        "class_probabilities": {
+          "CRITICAL": 0.08,
+          "HIGH": 0.76,
+          "LOW": 0.0,
+          "MODERATE": 0.16
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.795,
+          24.825
+        ]
+      },
+      "properties": {
+        "name": "Silchar_Barak_Lowland",
+        "predicted_risk_score_pct": 57.7,
+        "predicted_risk_category": "MODERATE",
+        "evacuation_advised": false,
+        "class_probabilities": {
+          "CRITICAL": 0.04,
+          "HIGH": 0.44,
+          "LOW": 0.04,
+          "MODERATE": 0.48
+        }
+      }
+    }
+  ]
+}

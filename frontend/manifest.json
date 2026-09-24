@@ -1,0 +1,71 @@
+{
+  "name": "GeoAlertNER - Disaster Early Warning System",
+  "short_name": "GeoAlertNER",
+  "description": "AI-Driven Multi-Hazard Early Warning and Evacuation System for North Eastern Region (NER)",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#0B0F19",
+  "theme_color": "#0F172A",
+  "orientation": "any",
+  "categories": [
+    "safety",
+    "utilities",
+    "weather",
+    "navigation"
+  ],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Disaster Risk Map",
+      "url": "./index.html#map",
+      "description": "Real-time hazard geospatial overview"
+    },
+    {
+      "name": "Evacuation Planner",
+      "url": "./index.html#evacuation",
+      "description": "Find safe shelters and evacuation corridors"
+    },
+    {
+      "name": "AI Risk Calculator",
+      "url": "./index.html#calculator",
+      "description": "Compute machine learning risk scores"
+    },
+    {
+      "name": "Emergency Helplines",
+      "url": "./index.html#helplines",
+      "description": "Direct emergency contacts for NER states"
+    }
+  ]
+}
