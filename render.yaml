@@ -13,11 +13,11 @@ services:
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: .
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: DATABASE_URL
-        value: sqlite:////opt/render/project/src/data/geoalertner.db
+        value: sqlite:///./geoalertner.db
       - key: DEBUG
         value: "false"
       - key: SECRET_KEY
@@ -34,8 +34,4 @@ services:
       # For a custom domain, set this to: https://your-custom-domain.com
       - key: BACKEND_CORS_ORIGINS
         value: '["*"]'
-    disk:
-      name: geoalertner-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1              # Persistent disk so database survives deploys
     healthCheckPath: /health  # Render polls this endpoint to verify readiness
