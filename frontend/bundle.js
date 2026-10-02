@@ -2641,6 +2641,96 @@ class GeoAlertApp {
         this.showToast(`Audio Siren Alerts ${this.soundAlertsEnabled ? 'Enabled 🔔' : 'Muted 🔕'}`, 'info');
       });
     }
+
+    // ─── Welcome Demo Banner ──────────────────────────────────────────────
+    const bannerEl = document.getElementById('welcome-demo-banner');
+    const dismissBannerBtn = document.getElementById('btn-dismiss-banner');
+    // Restore dismissed state
+    if (localStorage.getItem('geoalert_banner_dismissed') === '1' && bannerEl) {
+      bannerEl.style.display = 'none';
+    }
+    if (dismissBannerBtn && bannerEl) {
+      dismissBannerBtn.addEventListener('click', () => {
+        bannerEl.style.animation = 'none';
+        bannerEl.style.opacity = '0';
+        bannerEl.style.transform = 'translateY(-8px)';
+        bannerEl.style.transition = 'all 0.3s ease';
+        setTimeout(() => { bannerEl.style.display = 'none'; }, 280);
+        localStorage.setItem('geoalert_banner_dismissed', '1');
+      });
+    }
+
+    // 1-click demo quick login from banner
+    const quickCitizenBtn = document.getElementById('btn-quick-demo-citizen');
+    if (quickCitizenBtn) {
+      quickCitizenBtn.addEventListener('click', () => {
+        this._applyDemoRole('citizen');
+        if (bannerEl) dismissBannerBtn && dismissBannerBtn.click();
+      });
+    }
+    const quickOfficerBtn = document.getElementById('btn-quick-demo-officer');
+    if (quickOfficerBtn) {
+      quickOfficerBtn.addEventListener('click', () => {
+        this._applyDemoRole('officer');
+        if (bannerEl) dismissBannerBtn && dismissBannerBtn.click();
+      });
+    }
+
+    // ─── Project Story Modal ──────────────────────────────────────────────
+    const storyModal = document.getElementById('modal-project-story');
+    const openStoryBtns = [
+      document.getElementById('btn-open-project-story'),
+      document.getElementById('btn-sidebar-project-story')
+    ];
+    const closeStoryBtn = document.getElementById('btn-close-project-story');
+    const storyTryBtn = document.getElementById('btn-story-try-demo');
+
+    openStoryBtns.forEach(btn => {
+      if (btn && storyModal) {
+        btn.addEventListener('click', () => { storyModal.style.display = 'flex'; });
+      }
+    });
+    if (closeStoryBtn && storyModal) {
+      closeStoryBtn.addEventListener('click', () => { storyModal.style.display = 'none'; });
+    }
+    if (storyModal) {
+      storyModal.addEventListener('click', (e) => {
+        if (e.target === storyModal) storyModal.style.display = 'none';
+      });
+    }
+    if (storyTryBtn && storyModal) {
+      storyTryBtn.addEventListener('click', () => {
+        storyModal.style.display = 'none';
+        this._applyDemoRole('citizen');
+      });
+    }
+  }
+
+  /** Apply a demo role without a real backend login */
+  _applyDemoRole(role) {
+    const DEMO_USERS = {
+      citizen: { full_name: 'Demo Citizen (Assam)', email: 'citizen@geoalertner.in', role: 'CITIZEN' },
+      officer: { full_name: 'Demo Field Officer (SDRF)', email: 'officer@geoalertner.in', role: 'FIELD_OFFICER' },
+      admin:   { full_name: 'Demo Admin (Disaster HQ)', email: 'admin@geoalertner.in',  role: 'ADMIN' }
+    };
+    const user = DEMO_USERS[role] || DEMO_USERS.citizen;
+
+    // Try real backend login first; fall back to client-side mock
+    const loginAttempt = async () => {
+      const PW = { citizen: 'Citizen@123', officer: 'Officer@123', admin: 'Admin@123' };
+      try {
+        await api.login(user.email, PW[role] || 'Citizen@123');
+      } catch (e) {
+        // Backend offline or credentials not seeded — create a client-side demo session
+        api.setSession('demo-token-' + role, user);
+        this.renderAuthState(user);
+      }
+    };
+    loginAttempt();
+    this.showToast(`✅ Exploring as ${user.full_name}`, 'success');
+    // Close auth modal if open
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.classList.add('hidden');
   }
 
   // --- USER AUTHENTICATION & RBAC UI ---

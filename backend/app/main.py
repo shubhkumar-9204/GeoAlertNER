@@ -38,6 +38,9 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+    except Exception as exc:
+        db.rollback()
+        logger.warning(f"Database seed skipped or encountered constraint (non-fatal): {exc}")
     finally:
         db.close()
     

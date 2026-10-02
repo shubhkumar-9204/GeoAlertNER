@@ -74,6 +74,9 @@
       </nav>
 
       <div class="sidebar-footer">
+        <button id="btn-sidebar-project-story" style="width:100%; background:transparent; border:1px solid rgba(168,85,247,0.3); color:#c084fc; border-radius:var(--radius-md); padding:7px 12px; font-size:11px; font-weight:600; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;">
+          📖 About This Project
+        </button>
         <div id="backend-status-pill" class="status-pill simulation">
           <span class="pulse-dot yellow"></span> Connecting Backend...
         </div>
@@ -131,6 +134,34 @@
 
       <!-- VIEW 1: DASHBOARD (Default) -->
       <section id="view-dashboard" class="view-panel active">
+
+        <!-- 🎯 Welcome Demo Banner (dismissible, shown to first-time visitors) -->
+        <div id="welcome-demo-banner" class="welcome-demo-banner">
+          <div style="flex:1; min-width:0;">
+            <div class="welcome-banner-badge">🚀 Live Project Demo</div>
+            <div class="welcome-banner-title">GeoAlertNER — AI Disaster Early Warning System for NER, India</div>
+            <div class="welcome-banner-desc">
+              This is a fully functional platform combining <strong style="color:#38bdf8">PyTorch ML hazard prediction</strong>,
+              <strong style="color:#10b981">GIS evacuation routing</strong>, <strong style="color:#a855f7">offline-first PWA</strong> reporting,
+              and role-based dashboards — built for the landslide &amp; flood-prone hills of North Eastern India.
+              Explore freely — all features work in simulation mode without login.
+            </div>
+            <div class="welcome-quick-actions">
+              <button class="btn btn-sm btn-outline-cyan" id="btn-quick-demo-citizen" style="font-size:12px;">🧑‍🌾 Try as Citizen</button>
+              <button class="btn btn-sm btn-outline-primary" id="btn-quick-demo-officer" style="font-size:12px;">🛡️ Try as Field Officer</button>
+              <button class="btn btn-sm" id="btn-open-project-story"
+                style="font-size:12px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); color:#c084fc; border-radius:var(--radius-md); padding:6px 14px; cursor:pointer; transition:all 0.2s;">
+                📖 Project Story &amp; Tech Stack
+              </button>
+              <a href="https://github.com/shubhkumar-9204/GeoAlertNER" target="_blank" rel="noopener"
+                style="font-size:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:#94a3b8; border-radius:var(--radius-md); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s;">
+                <span>⭐ GitHub</span>
+              </a>
+            </div>
+          </div>
+          <button id="btn-dismiss-banner" class="btn-dismiss-banner" title="Dismiss">&times;</button>
+        </div>
+
         <!-- 4 Top KPI Stat Cards -->
         <div class="stats-grid">
           <!-- KPI 1 -->
@@ -959,9 +990,135 @@
   <!-- Notification Toasts Container -->
   <div id="toast-container"></div>
 
+  <!-- ===================== PROJECT STORY MODAL ===================== -->
+  <div id="modal-project-story" class="modal-overlay" style="display:none;">
+    <div class="modal modal-lg" style="padding:28px;">
+      <div class="modal-header" style="margin-bottom:20px;">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">⛰️</div>
+          <div>
+            <h3 class="text-lg font-bold text-white">GeoAlertNER — Project Story</h3>
+            <p class="text-xs text-slate-400">AI-Driven Disaster Early Warning &amp; Evacuation System for NER, India</p>
+          </div>
+        </div>
+        <button id="btn-close-project-story" class="modal-close-btn">&times;</button>
+      </div>
+
+      <!-- Problem Context -->
+      <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:12px; padding:14px 16px; margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:700; color:#fca5a5; margin-bottom:5px;">🎯 Problem This Solves</div>
+        <p style="font-size:12px; color:#94a3b8; line-height:1.6;">
+          India's North Eastern Region (Assam, Meghalaya, Sikkim &amp; 5 other states) faces <strong style="color:#f8fafc">some of the world's highest landslide &amp; flash flood risk</strong>.
+          Existing warning systems are fragmented, English-only, and require constant internet connectivity —
+          leaving remote hill communities with <strong style="color:#fca5a5">zero advance warning</strong>.
+          GeoAlertNER addresses this with AI hazard prediction, offline-first PWA citizen reporting, and multilingual voice alerts.
+        </p>
+      </div>
+
+      <div class="project-story-grid">
+        <div class="story-card">
+          <div class="story-card-title">🧠 ML / AI Layer</div>
+          <div class="story-card-text">
+            Custom Random Forest &amp; Gradient Boosting ensemble trained on 9 geological, hydrological &amp; meteorological features:
+            slope angle, 24h rainfall, soil moisture, elevation, NDVI, lithology code, drainage distance, tilt rate &amp; rain rate.
+            Model returns probabilistic hazard scores with evacuation advisories.
+          </div>
+          <div class="tech-pills-wrap">
+            <span class="tech-pill">scikit-learn</span>
+            <span class="tech-pill">NumPy</span>
+            <span class="tech-pill">Pandas</span>
+            <span class="tech-pill">Random Forest</span>
+          </div>
+        </div>
+
+        <div class="story-card">
+          <div class="story-card-title">🗺️ GIS &amp; Spatial Layer</div>
+          <div class="story-card-text">
+            Interactive Leaflet.js map with GeoJSON hazard zone polygons, live IoT sensor markers, safe shelter icons,
+            and dynamically drawn evacuation corridors. Supports real-time heatmap overlay from backend risk scores.
+          </div>
+          <div class="tech-pills-wrap">
+            <span class="tech-pill">Leaflet.js</span>
+            <span class="tech-pill">GeoJSON</span>
+            <span class="tech-pill">Shapely</span>
+            <span class="tech-pill">PostGIS-ready</span>
+          </div>
+        </div>
+
+        <div class="story-card">
+          <div class="story-card-title">⚡ Backend API</div>
+          <div class="story-card-text">
+            FastAPI serving 14+ REST endpoints across Auth, Risk, Sensors, Evacuation, Shelters, Weather, Telemetry &amp; Helplines.
+            JWT Role-Based Access Control with 3 roles: Citizen, Field Officer, Admin.
+            Pydantic v2 schema validation, SQLAlchemy ORM, async-ready.
+          </div>
+          <div class="tech-pills-wrap">
+            <span class="tech-pill">FastAPI</span>
+            <span class="tech-pill">SQLAlchemy</span>
+            <span class="tech-pill">JWT / RBAC</span>
+            <span class="tech-pill">SQLite</span>
+          </div>
+        </div>
+
+        <div class="story-card">
+          <div class="story-card-title">📱 Frontend &amp; PWA</div>
+          <div class="story-card-text">
+            Zero-framework Vanilla JS ES6 with offline Service Worker, IndexedDB queue for citizen reports,
+            Chart.js forecast visualization, multilingual i18n (Assamese, Bengali, Hindi, English),
+            and Web Speech API TTS voice alerts.
+          </div>
+          <div class="tech-pills-wrap">
+            <span class="tech-pill">Vanilla JS ES6</span>
+            <span class="tech-pill">PWA / SW</span>
+            <span class="tech-pill">Chart.js</span>
+            <span class="tech-pill">Web Speech API</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Numbers -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin:16px 0;">
+        <div style="flex:1; min-width:140px; background:rgba(15,23,42,0.8); border:1px solid rgba(51,65,85,0.5); border-radius:12px; padding:14px; text-align:center;">
+          <div style="font-size:1.8rem; font-weight:800; color:#38bdf8;">14+</div>
+          <div style="font-size:11px; color:#94a3b8;">REST API Endpoints</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(15,23,42,0.8); border:1px solid rgba(51,65,85,0.5); border-radius:12px; padding:14px; text-align:center;">
+          <div style="font-size:1.8rem; font-weight:800; color:#10b981;">9</div>
+          <div style="font-size:11px; color:#94a3b8;">ML Feature Inputs</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(15,23,42,0.8); border:1px solid rgba(51,65,85,0.5); border-radius:12px; padding:14px; text-align:center;">
+          <div style="font-size:1.8rem; font-weight:800; color:#a855f7;">4</div>
+          <div style="font-size:11px; color:#94a3b8;">Regional Languages</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(15,23,42,0.8); border:1px solid rgba(51,65,85,0.5); border-radius:12px; padding:14px; text-align:center;">
+          <div style="font-size:1.8rem; font-weight:800; color:#f59e0b;">9/9</div>
+          <div style="font-size:11px; color:#94a3b8;">Integration Tests Passing</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:rgba(15,23,42,0.8); border:1px solid rgba(51,65,85,0.5); border-radius:12px; padding:14px; text-align:center;">
+          <div style="font-size:1.8rem; font-weight:800; color:#ef4444;">8</div>
+          <div style="font-size:11px; color:#94a3b8;">NER States Covered</div>
+        </div>
+      </div>
+
+      <div class="author-highlight-box">
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#f8fafc;">Built as a full-stack portfolio project</div>
+          <div style="font-size:12px; color:#94a3b8; margin-top:3px;">
+            Designed to demonstrate: Python backend architecture · ML integration · GIS systems · PWA offline engineering · RBAC security
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a href="https://github.com/shubhkumar-9204/GeoAlertNER" target="_blank" rel="noopener"
+            class="btn btn-sm btn-outline-primary" style="font-size:11px;">⭐ View on GitHub</a>
+          <button id="btn-story-try-demo" class="btn btn-sm btn-outline-cyan" style="font-size:11px;">🚀 Try Demo Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Consolidated Application Bundle -->
-  <script src="bundle.js?v=5"></script>
+  <script src="bundle.js?v=6"></script>
 </body>
 
 </html>
