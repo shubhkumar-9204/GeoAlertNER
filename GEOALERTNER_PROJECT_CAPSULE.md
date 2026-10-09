@@ -8762,10 +8762,10 @@ export const i18n = new I18nManager();
           <span data-i18n="nav_reports">Citizen Reports</span>
           <span id="offline-queue-badge" class="badge badge-warning text-xs hidden">0</span>
         </button>
-        <button class="nav-btn" data-view="simulator" disabled title="IoT Sensor Integration - Coming Soon" style="opacity:0.45; cursor:not-allowed;">
+        <button class="nav-btn" data-view="simulator" title="Hardware IoT Simulator Control Center">
           <span class="icon">📡</span>
           <span data-i18n="nav_simulator">IoT Sensors</span>
-          <span class="badge badge-outline text-xs" style="margin-left:auto; font-size:9px; padding:1px 5px;">Soon</span>
+          <span class="badge badge-primary text-xs" style="margin-left:auto; font-size:9px; padding:1px 5px;">Live</span>
         </button>
         <button class="nav-btn" data-view="helplines">
           <span class="icon">📞</span>

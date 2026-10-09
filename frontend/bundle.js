@@ -902,12 +902,28 @@ class GeoAlertAPI {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || `HTTP Error ${res.status}: ${res.statusText}`);
+        let errorMsg = `HTTP Error ${res.status}: ${res.statusText}`;
+        if (errData && errData.detail) {
+          if (typeof errData.detail === 'string') {
+            errorMsg = errData.detail;
+          } else if (Array.isArray(errData.detail) && errData.detail.length > 0) {
+            errorMsg = errData.detail.map(d => {
+              const msg = d.msg || d.message || JSON.stringify(d);
+              return msg.replace(/^Value error,\s*/i, '');
+            }).join('; ');
+          } else {
+            errorMsg = JSON.stringify(errData.detail);
+          }
+        }
+        throw new Error(errorMsg);
       }
       this.notifyStatus(true);
       return await res.json();
     } catch (err) {
       console.warn(`[GeoAlertAPI] Call to ${endpoint} failed:`, err.message);
+      if (err.name === 'TypeError' || err.message === 'Failed to fetch' || (err.message && err.message.toLowerCase().includes('fetch'))) {
+        throw new Error('Cannot connect to backend server. Make sure FastAPI is running on port 8000 (python -m uvicorn backend.app.main:app --port 8000).');
+      }
       throw err;
     }
   }
@@ -2372,6 +2388,7 @@ class GeoAlertApp {
     // 1. Setup Navigation & Button Event Listeners immediately
     try {
       this.setupNavigation();
+      this.setupThemeSelector();
       this.setupEventListeners();
       this.setupAuthUI();
     } catch (e) {
@@ -2447,6 +2464,30 @@ class GeoAlertApp {
         this.switchView(targetView);
       });
     });
+  }
+
+  setupThemeSelector() {
+    const themeSelect = document.getElementById('theme-selector');
+    const savedTheme = localStorage.getItem('geoalert_theme') || 'sapphire';
+
+    // Apply saved or default theme
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (themeSelect) {
+      themeSelect.value = savedTheme;
+      themeSelect.addEventListener('change', (e) => {
+        const theme = e.target.value;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('geoalert_theme', theme);
+        const names = {
+          sapphire: '🌌 Midnight Sapphire',
+          emerald: '🌲 Himalayan Pine',
+          amethyst: '🔮 Cosmic Amethyst',
+          slate: '⚡ Stealth Slate',
+          onyx: '🌑 Deep Onyx'
+        };
+        this.showToast(`🎨 Theme changed to ${names[theme] || theme}`, 'info');
+      });
+    }
   }
 
   switchView(viewName) {
