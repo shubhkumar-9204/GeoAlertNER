@@ -19,3 +19,19 @@ def test_csp_allows_both_india_geocoders():
     assert "https://photon.komoot.io" in csp
     assert "https://nominatim.openstreetmap.org" in csp
     assert "connect-src 'self'" in csp
+
+
+def test_csp_allows_leaflet_css_fallback_cdns():
+    middleware = SecurityShieldMiddleware(app=lambda scope, receive, send: None)
+    request = SimpleNamespace(url=SimpleNamespace(path="/health"))
+
+    async def call_next(_request):
+        return Response("ok")
+
+    response = asyncio.run(middleware.dispatch(request, call_next))
+    csp = response.headers["content-security-policy"]
+
+    assert "style-src 'self'" in csp
+    assert "https://unpkg.com" in csp
+    assert "https://cdnjs.cloudflare.com" in csp
+    assert "https://cdn.jsdelivr.net" in csp
