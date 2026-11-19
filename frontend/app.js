@@ -1074,6 +1074,10 @@ class GeoAlertApp {
         throw new Error('Enter a valid place name or both latitude and longitude.');
       }
 
+      // Keep the user on the Risk Map and focus the map on the searched location.
+      this.switchView('map');
+      geoMap.centerOn(lat, lon, 13);
+      geoMap.setUserLocation(lat, lon);
       const result = await api.assessRisk({ latitude: lat, longitude: lon });
       const score = Number(result.risk_score);
       const level = String(result.risk_level || 'UNKNOWN').toUpperCase();
