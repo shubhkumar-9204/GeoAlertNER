@@ -2403,13 +2403,9 @@ class GeoAlertApp {
       console.warn('[App] i18n init warning:', e);
     }
 
-    // 3. Initialize GIS Map
-    try {
-      geoMap.init('map-container');
-      window.geoMap = geoMap;
-    } catch (e) {
-      console.warn('[App] GIS map init warning:', e);
-    }
+    // 3. Expose GIS map controller; initialize Leaflet only after its panel is visible.
+    // Initializing Leaflet inside the hidden Risk Map panel gives it a zero-sized canvas.
+    window.geoMap = geoMap;
 
     // 4. Setup Offline Sync & Backend Status Listeners
     try {
@@ -2511,10 +2507,15 @@ class GeoAlertApp {
       }
     });
 
-    // Refresh map size if map view opened or dashboard opened
-    setTimeout(() => {
-      if (geoMap.map) geoMap.map.invalidateSize();
-    }, 100);
+    // Initialize Leaflet only when its container is visible, then recalculate its size.
+    if (viewName === 'map' && !geoMap.map) {
+      geoMap.init('map-container');
+    }
+    if (viewName === 'map' || geoMap.map) {
+      [150, 500].forEach(delay => setTimeout(() => {
+        if (geoMap.map) geoMap.map.invalidateSize(true);
+      }, delay));
+    }
 
     if (viewName === 'reports') {
       this.loadCitizenReportsFeed();
