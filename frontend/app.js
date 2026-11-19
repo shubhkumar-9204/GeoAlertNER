@@ -159,7 +159,7 @@ class GeoAlertApp {
       pickMapBtn.addEventListener('click', () => {
         geoMap.selectingOrigin = true;
         this.showToast('📍 Click anywhere on the map to set your current location.', 'info');
-        this.switchView('dashboard');
+        this.switchView('map');
         setTimeout(() => document.getElementById('map-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
         geoMap.onOriginSelect = (lat, lon) => {
           document.getElementById('evac-origin-lat').value = lat.toFixed(4);
@@ -211,7 +211,7 @@ class GeoAlertApp {
         document.getElementById('area-risk-lon').value = lon.toFixed(6);
         this.showToast('Location selected. Press “Check area risk” to assess it.', 'success');
       };
-      this.switchView('dashboard');
+      this.switchView('map');
       setTimeout(() => document.getElementById('map-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
       this.showToast('Click a point on the map to select the location.', 'info');
     });
