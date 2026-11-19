@@ -130,14 +130,26 @@ class GeoAlertApp {
       }
     });
 
-    // Initialize Leaflet only when its container is visible, then recalculate its size.
-    if (viewName === 'map' && !geoMap.map) {
-      geoMap.init('map-container');
-    }
-    if (viewName === 'map' || geoMap.map) {
-      [150, 500].forEach(delay => setTimeout(() => {
-        if (geoMap.map) geoMap.map.invalidateSize(true);
-      }, delay));
+    // Initialize Leaflet after the map panel is visible, then resize it after layout settles.
+    // The extra frame/delayed passes prevent a blank map when navigation or a risk search
+    // reveals the map panel after it was previously hidden.
+    if (viewName === 'map') {
+      const refreshVisibleMap = () => {
+        const mapContainer = document.getElementById('map-container');
+        if (!mapContainer) return;
+        if (!geoMap.map) geoMap.init('map-container');
+        if (geoMap.map) {
+          geoMap.map.invalidateSize(true);
+        }
+      };
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(refreshVisibleMap);
+      } else {
+        refreshVisibleMap();
+      }
+      [250, 700, 1200].forEach(delay => setTimeout(refreshVisibleMap, delay));
+    } else if (geoMap.map) {
+      setTimeout(() => geoMap.map.invalidateSize(true), 150);
     }
 
     if (viewName === 'reports') {
