@@ -28,29 +28,54 @@
         'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
       ];
       var index = 0;
+      var requestTimeoutMs = 7000;
       window.__leafletLoadFailed = false;
+
       function loadNext() {
-        if (window.L && window.L.map) return;
+        if (window.L && window.L.map) {
+          window.__leafletLoadFailed = false;
+          window.dispatchEvent(new Event('leaflet-ready'));
+          return;
+        }
         if (index >= sources.length) {
           window.__leafletLoadFailed = true;
           window.dispatchEvent(new Event('leaflet-load-failed'));
           console.error('[GeoAlertNER] Leaflet failed to load from all configured CDNs.');
           return;
         }
+
+        var source = sources[index++];
         var script = document.createElement('script');
-        script.src = sources[index++];
-        script.onload = function () {
-          if (window.L && window.L.map) {
+        var settled = false;
+        var timeoutId = window.setTimeout(function () {
+          finish(false, 'timeout');
+        }, requestTimeoutMs);
+
+        function finish(loaded, reason) {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          script.onload = null;
+          script.onerror = null;
+
+          if (loaded && window.L && window.L.map) {
             window.__leafletLoadFailed = false;
             window.dispatchEvent(new Event('leaflet-ready'));
-          } else {
-            script.remove();
-            loadNext();
+            return;
           }
-        };
-        script.onerror = function () { script.remove(); loadNext(); };
+
+          script.remove();
+          console.warn('[GeoAlertNER] Leaflet CDN unavailable (' + reason + '): ' + source);
+          loadNext();
+        }
+
+        script.async = true;
+        script.src = source;
+        script.onload = function () { finish(!!(window.L && window.L.map), 'invalid response'); };
+        script.onerror = function () { finish(false, 'network error'); };
         document.head.appendChild(script);
       }
+
       loadNext();
     })();
   </script>
