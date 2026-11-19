@@ -220,30 +220,10 @@ class GeoAlertAPI {
   }
 
   async assessRisk(payload) {
-    try {
-      return await this.request('/risk/assess', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {
-      const rain = payload.rainfall_24h_mm || 50;
-      const slope = payload.slope_angle || 30;
-      const moist = payload.soil_moisture_m3m3 || 0.4;
-      const score = Math.min(100, Math.round((rain * 0.35) + (slope * 1.1) + (moist * 55)));
-      let level = 'LOW';
-      if (score >= 70) level = 'CRITICAL';
-      else if (score >= 45) level = 'HIGH';
-      else if (score >= 25) level = 'MODERATE';
-
-      return {
-        risk_score: score,
-        risk_level: level,
-        landslide_probability: Math.min(0.99, score / 100),
-        flash_flood_probability: Math.min(0.95, (rain / 200) * 0.8),
-        action_recommendation: score >= 70 ? 'Immediate evacuation advised' : 'Monitor local slopes',
-        source: 'CLIENT_FALLBACK'
-      };
-    }
+    return await this.request('/risk/assess', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
   }
 
   async predictMLRisk(params = {}) {
