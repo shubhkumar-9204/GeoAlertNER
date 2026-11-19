@@ -67,38 +67,14 @@ class GeoAlertMap {
       // Add zoom control top right
       L.control.zoom({ position: 'topright' }).addTo(this.map);
 
-    // Standard OpenStreetMap & Dark/Satellite tiles with NO API Key needed
-    const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
-    });
-
+    // Use the public OpenStreetMap raster tile service as the sole base layer.
+    // This avoids third-party styles that may return API-key-required placeholder tiles.
     const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: 'abc',
       maxZoom: 19
     });
-
-    const satTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; Esri, Maxar, Earthstar Geographics',
-      maxZoom: 18
-    });
-
-    const topoTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenTopoMap (CC-BY-SA)',
-      maxZoom: 17
-    });
-
-    // Use OpenStreetMap as the default base layer; it does not require an API key.
     osmStandard.addTo(this.map);
-
-    // Layer Switcher
-    L.control.layers({
-      'Dark Map': darkTiles,
-      'OpenStreetMap Standard': osmStandard,
-      'Satellite Imagery': satTiles,
-      'Topographic Terrain': topoTiles
-    }, null, { position: 'topright' }).addTo(this.map);
 
     // Layer groups for toggle & refresh
     this.zoneLayerGroup = L.layerGroup().addTo(this.map);
