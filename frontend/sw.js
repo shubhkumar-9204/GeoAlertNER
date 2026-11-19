@@ -4,8 +4,8 @@
  * Caching Strategy: Network-First with Cache Fallback for APIs, Cache-First for App Shell
  */
 
-const CACHE_NAME = 'geoalertner-core-v10';
-const DATA_CACHE_NAME = 'geoalertner-data-v10';
+const CACHE_NAME = 'geoalertner-core-v11';
+const DATA_CACHE_NAME = 'geoalertner-data-v11';
 
 const STATIC_ASSETS = [
   './',
