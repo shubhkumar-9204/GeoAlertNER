@@ -1042,6 +1042,73 @@ class GeoAlertApp {
     );
   }
 
+  isSupportedNERState(state) {
+    const supported = new Set([
+      'arunachal pradesh', 'assam', 'manipur', 'meghalaya',
+      'mizoram', 'nagaland', 'sikkim', 'tripura'
+    ]);
+    return supported.has(String(state || '').trim().toLowerCase());
+  }
+
+  async geocodeIndiaPlace(query) {
+    const encoded = encodeURIComponent(query.trim());
+    // Photon supports nationwide place search and browser CORS. Nominatim is a fallback.
+    try {
+      const response = await fetch(`https://photon.komoot.io/api/?q=${encoded}&limit=5&lang=en`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Photon geocoder unavailable');
+      const data = await response.json();
+      const features = (data.features || []).filter(item =>
+        String(item.properties?.countrycode || '').toUpperCase() === 'IN'
+      );
+      if (features.length) {
+        const item = features[0];
+        return {
+          lat: Number(item.geometry.coordinates[1]),
+          lon: Number(item.geometry.coordinates[0]),
+          state: item.properties?.state || '',
+          label: [item.properties?.name, item.properties?.state, item.properties?.country]
+            .filter(Boolean).join(', ')
+        };
+      }
+    } catch (error) {
+      console.warn('[AreaRisk] Photon geocoding failed; trying Nominatim:', error.message);
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=in&addressdetails=1&q=${encoded}`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (!response.ok) throw new Error('India-wide place search is temporarily unavailable. Please retry or enter coordinates.');
+    const matches = await response.json();
+    if (!matches.length) throw new Error('No matching Indian place found. Check the spelling or enter coordinates.');
+    const item = matches[0];
+    return {
+      lat: Number(item.lat),
+      lon: Number(item.lon),
+      state: item.address?.state || item.address?.state_district || '',
+      label: item.display_name || query
+    };
+  }
+
+  async reverseGeocodeIndiaState(lat, lon) {
+    try {
+      const response = await fetch(
+        `https://photon.komoot.io/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`,
+        { headers: { 'Accept': 'application/json' } }
+      );
+      if (!response.ok) return '';
+      const data = await response.json();
+      const feature = data.features?.[0];
+      if (String(feature?.properties?.countrycode || '').toUpperCase() !== 'IN') return '';
+      return feature.properties?.state || '';
+    } catch (error) {
+      console.warn('[AreaRisk] Reverse geocoding unavailable:', error.message);
+      return '';
+    }
+  }
+
   async handleAreaRiskCheck(e) {
     e.preventDefault();
     const placeInput = document.getElementById('area-risk-place');
@@ -1051,52 +1118,78 @@ class GeoAlertApp {
     const button = document.getElementById('btn-area-risk-check');
     let lat = latInput.value.trim() === '' ? NaN : Number(latInput.value);
     let lon = lonInput.value.trim() === '' ? NaN : Number(lonInput.value);
+    let state = '';
+    let resolvedLabel = placeInput.value.trim();
 
     button.disabled = true;
-    button.textContent = 'Checking…';
+    button.textContent = 'Finding location…';
     resultBox.classList.remove('hidden');
-    resultBox.textContent = 'Getting location and checking available weather and terrain data…';
+    resultBox.textContent = 'Searching Indian locations…';
 
     try {
       if ((!Number.isFinite(lat) || !Number.isFinite(lon)) && placeInput.value.trim()) {
-        const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=in&q=' + encodeURIComponent(placeInput.value.trim());
-        const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
-        if (!response.ok) throw new Error('Place search is temporarily unavailable. Try coordinates instead.');
-        const matches = await response.json();
-        if (!matches.length) throw new Error('No matching place found. Check the spelling or enter coordinates.');
-        lat = Number(matches[0].lat);
-        lon = Number(matches[0].lon);
+        const place = await this.geocodeIndiaPlace(placeInput.value);
+        lat = place.lat;
+        lon = place.lon;
+        state = place.state || '';
+        resolvedLabel = place.label || placeInput.value.trim();
         latInput.value = lat.toFixed(6);
         lonInput.value = lon.toFixed(6);
       }
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        throw new Error('Enter a valid place name or both latitude and longitude.');
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < 6 || lat > 38 || lon < 68 || lon > 98) {
+        throw new Error('Enter a valid location within India. You can search by city, district or coordinates.');
       }
 
-      // Keep the user on the Risk Map and focus the map on the searched location.
+      if (!state) state = await this.reverseGeocodeIndiaState(lat, lon);
+
+      // Map navigation is nationwide; risk assessment remains limited to verified NER coverage.
       this.switchView('map');
-      geoMap.centerOn(lat, lon, 13);
-      geoMap.setUserLocation(lat, lon);
+      setTimeout(() => {
+        geoMap.centerOn(lat, lon, 13);
+        geoMap.setUserLocation(lat, lon);
+        if (geoMap.map) geoMap.map.invalidateSize(true);
+      }, 180);
+
+      if (!state) {
+        resultBox.innerHTML = `<div class="panel-card p-4 text-sm text-amber-300">
+          <strong>Location found; risk coverage could not be verified.</strong>
+          <p class="mt-2">${escapeHtml(resolvedLabel)} is shown on the map, but we could not confirm its state. Risk assessment is unavailable until coverage can be verified.</p>
+          <p class="text-xs text-slate-400 mt-2">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)}</p>
+        </div>`;
+        return;
+      }
+
+      if (!this.isSupportedNERState(state)) {
+        resultBox.innerHTML = `<div class="panel-card p-4 text-sm text-amber-300">
+          <strong>Map available · Risk assessment not yet supported</strong>
+          <p class="mt-2">${escapeHtml(resolvedLabel)} is in ${escapeHtml(state)}, outside the currently supported North Eastern Region coverage.</p>
+          <p class="mt-2">You can explore this location on the map. Pan-India risk assessment will be enabled after verified regional datasets and models are integrated.</p>
+          <p class="text-xs text-slate-400 mt-2">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)}</p>
+        </div>`;
+        return;
+      }
+
+      button.textContent = 'Checking NER risk…';
+      resultBox.textContent = 'Location found in supported NER coverage. Checking available risk data…';
       const result = await api.assessRisk({ latitude: lat, longitude: lon });
       const score = Number(result.risk_score);
       const level = String(result.risk_level || 'UNKNOWN').toUpperCase();
       const colorClass = ({ LOW: 'low', MODERATE: 'moderate', HIGH: 'high', CRITICAL: 'critical' })[level] || 'outline';
       const weatherIsLive = result.weather_summary?.is_live_data !== false;
       const dataSource = result.weather_summary?.data_source || 'Source not reported by the service';
-      const placeLabel = placeInput.value.trim() || 'Selected coordinates';
       resultBox.innerHTML = `
         <div class="panel-card p-4">
           <div class="flex items-center justify-between gap-2 flex-wrap">
-            <div><div class="text-xs text-slate-400">${escapeHtml(placeLabel)}</div><div class="text-lg font-bold mt-1">${escapeHtml(level.replace('_',' '))} RISK</div></div>
+            <div><div class="text-xs text-slate-400">${escapeHtml(resolvedLabel)} · ${escapeHtml(state)}</div><div class="text-lg font-bold mt-1">${escapeHtml(level.replace('_',' '))} RISK</div></div>
             <span class="badge badge-${colorClass}">${Number.isFinite(score) ? score.toFixed(1) : '—'} / 100</span>
           </div>
           <p class="text-sm mt-3">${escapeHtml(result.action_recommendation || 'Review local conditions and official advisories.')}</p>
-          <p class="text-xs text-slate-400 mt-3">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)} · ${weatherIsLive ? 'Weather data: live feed (' + dataSource + ').' : 'Weather data: offline fallback (' + dataSource + '). Treat this result as indicative only.'}</p>
+          <p class="text-xs text-slate-400 mt-3">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)} · ${weatherIsLive ? 'Weather data: live feed (' + escapeHtml(dataSource) + ').' : 'Weather data: offline fallback (' + escapeHtml(dataSource) + '). Treat this result as indicative only.'}</p>
           <p class="text-xs text-slate-400 mt-2">This point assessment does not mean every nearby street or village has been mapped. A low score is not a safety guarantee.</p>
         </div>`;
     } catch (error) {
-      resultBox.innerHTML = `<div class="panel-card p-4 text-sm text-amber-300">${escapeHtml(error.message || 'Unable to assess this location right now.')}</div>`;
+      resultBox.innerHTML = `<div class="panel-card p-4 text-sm text-amber-300">${escapeHtml(error.message || 'Unable to locate this place right now.')}</div>`;
     } finally {
       button.disabled = false;
       button.textContent = 'Check area risk';
