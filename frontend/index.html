@@ -17,11 +17,43 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-  <!-- Leaflet GIS Map CSS & JS -->
+  <!-- Leaflet GIS Map CSS & JS: sequential CDN fallback -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          onerror="this.onerror=null;var fallback=document.createElement('script');fallback.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';document.head.appendChild(fallback)"></script>
+        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';this.onerror=function(){this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'}">
+  <script>
+    (function () {
+      var sources = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+      ];
+      var index = 0;
+      window.__leafletLoadFailed = false;
+      function loadNext() {
+        if (window.L && window.L.map) return;
+        if (index >= sources.length) {
+          window.__leafletLoadFailed = true;
+          window.dispatchEvent(new Event('leaflet-load-failed'));
+          console.error('[GeoAlertNER] Leaflet failed to load from all configured CDNs.');
+          return;
+        }
+        var script = document.createElement('script');
+        script.src = sources[index++];
+        script.onload = function () {
+          if (window.L && window.L.map) {
+            window.__leafletLoadFailed = false;
+            window.dispatchEvent(new Event('leaflet-ready'));
+          } else {
+            script.remove();
+            loadNext();
+          }
+        };
+        script.onerror = function () { script.remove(); loadNext(); };
+        document.head.appendChild(script);
+      }
+      loadNext();
+    })();
+  </script>
   <!-- Chart.js for Forecasts & Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Custom Modern Styling -->
@@ -1034,7 +1066,7 @@
 
 
   <!-- Consolidated Application Bundle -->
-  <script src="bundle.js?v=10"></script>
+  <script src="bundle.js?v=11"></script>
 </body>
 
 </html>
