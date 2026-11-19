@@ -159,7 +159,8 @@ class GeoAlertApp {
       pickMapBtn.addEventListener('click', () => {
         geoMap.selectingOrigin = true;
         this.showToast('📍 Click anywhere on the map to set your current location.', 'info');
-        this.switchView('map');
+        this.switchView('dashboard');
+        setTimeout(() => document.getElementById('map-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
         geoMap.onOriginSelect = (lat, lon) => {
           document.getElementById('evac-origin-lat').value = lat.toFixed(4);
           document.getElementById('evac-origin-lon').value = lon.toFixed(4);
