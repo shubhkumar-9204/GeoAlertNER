@@ -141,8 +141,6 @@ class GeoAlertApp {
 
     if (viewName === 'reports') {
       this.loadCitizenReportsFeed();
-    } else if (viewName === 'simulator') {
-      simulator.loadSensorsTable();
     } else if (viewName === 'helplines') {
       this.loadHelplines();
     }
@@ -197,23 +195,25 @@ class GeoAlertApp {
       });
     }
 
-    // Simulator scenario buttons
-    document.querySelectorAll('.btn-scenario').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const scenario = btn.getAttribute('data-scenario');
-        simulator.setScenario(scenario);
-      });
+    // Citizen area risk checker
+    const areaRiskForm = document.getElementById('area-risk-form');
+    if (areaRiskForm) areaRiskForm.addEventListener('submit', (e) => this.handleAreaRiskCheck(e));
+
+    const areaGpsBtn = document.getElementById('btn-area-risk-gps');
+    if (areaGpsBtn) areaGpsBtn.addEventListener('click', () => this.detectAreaRiskGPS());
+
+    const areaMapBtn = document.getElementById('btn-area-risk-map');
+    if (areaMapBtn) areaMapBtn.addEventListener('click', () => {
+      geoMap.selectingRiskLocation = true;
+      geoMap.onRiskLocationSelect = (lat, lon) => {
+        document.getElementById('area-risk-lat').value = lat.toFixed(6);
+        document.getElementById('area-risk-lon').value = lon.toFixed(6);
+        this.showToast('Location selected. Press “Check area risk” to assess it.', 'success');
+      };
+      this.switchView('dashboard');
+      setTimeout(() => document.getElementById('map-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+      this.showToast('Click a point on the map to select the location.', 'info');
     });
-
-    const triggerTickBtn = document.getElementById('btn-sim-tick');
-    if (triggerTickBtn) {
-      triggerTickBtn.addEventListener('click', () => simulator.triggerTick());
-    }
-
-    const autoSimBtn = document.getElementById('btn-sim-auto-toggle');
-    if (autoSimBtn) {
-      autoSimBtn.addEventListener('click', () => simulator.toggleAutoSimulation());
-    }
 
     // Helpline state filter
     const helplineStateSelect = document.getElementById('helpline-state-select');
@@ -1020,6 +1020,80 @@ class GeoAlertApp {
       `).join('');
     } catch (e) {
       console.warn('[App] Helplines load error:', e);
+    }
+  }
+
+  // --- CITIZEN AREA RISK CHECKER ---
+  detectAreaRiskGPS() {
+    if (!navigator.geolocation) {
+      this.showToast('Location services are not available in this browser.', 'warning');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        document.getElementById('area-risk-lat').value = pos.coords.latitude.toFixed(6);
+        document.getElementById('area-risk-lon').value = pos.coords.longitude.toFixed(6);
+        this.showToast('Location added. Press “Check area risk” to continue.', 'success');
+      },
+      () => this.showToast('Could not access your location. Enter coordinates or a place name instead.', 'warning'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  async handleAreaRiskCheck(e) {
+    e.preventDefault();
+    const placeInput = document.getElementById('area-risk-place');
+    const latInput = document.getElementById('area-risk-lat');
+    const lonInput = document.getElementById('area-risk-lon');
+    const resultBox = document.getElementById('area-risk-result');
+    const button = document.getElementById('btn-area-risk-check');
+    let lat = latInput.value.trim() === '' ? NaN : Number(latInput.value);
+    let lon = lonInput.value.trim() === '' ? NaN : Number(lonInput.value);
+
+    button.disabled = true;
+    button.textContent = 'Checking…';
+    resultBox.classList.remove('hidden');
+    resultBox.textContent = 'Getting location and checking available weather and terrain data…';
+
+    try {
+      if ((!Number.isFinite(lat) || !Number.isFinite(lon)) && placeInput.value.trim()) {
+        const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=in&q=' + encodeURIComponent(placeInput.value.trim());
+        const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error('Place search is temporarily unavailable. Try coordinates instead.');
+        const matches = await response.json();
+        if (!matches.length) throw new Error('No matching place found. Check the spelling or enter coordinates.');
+        lat = Number(matches[0].lat);
+        lon = Number(matches[0].lon);
+        latInput.value = lat.toFixed(6);
+        lonInput.value = lon.toFixed(6);
+      }
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        throw new Error('Enter a valid place name or both latitude and longitude.');
+      }
+
+      const result = await api.assessRisk({ latitude: lat, longitude: lon });
+      const score = Number(result.risk_score);
+      const level = String(result.risk_level || 'UNKNOWN').toUpperCase();
+      const colorClass = ({ LOW: 'low', MODERATE: 'moderate', HIGH: 'high', CRITICAL: 'critical' })[level] || 'outline';
+      const weatherIsLive = result.weather_summary?.is_live_data !== false;
+      const dataSource = result.weather_summary?.data_source || 'Source not reported by the service';
+      const placeLabel = placeInput.value.trim() || 'Selected coordinates';
+      resultBox.innerHTML = `
+        <div class="panel-card p-4">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div><div class="text-xs text-slate-400">${escapeHtml(placeLabel)}</div><div class="text-lg font-bold mt-1">${escapeHtml(level.replace('_',' '))} RISK</div></div>
+            <span class="badge badge-${colorClass}">${Number.isFinite(score) ? score.toFixed(1) : '—'} / 100</span>
+          </div>
+          <p class="text-sm mt-3">${escapeHtml(result.action_recommendation || 'Review local conditions and official advisories.')}</p>
+          <p class="text-xs text-slate-400 mt-3">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)} · ${weatherIsLive ? 'Weather data: live feed (' + dataSource + ').' : 'Weather data: offline fallback (' + dataSource + '). Treat this result as indicative only.'}</p>
+          <p class="text-xs text-slate-400 mt-2">This point assessment does not mean every nearby street or village has been mapped. A low score is not a safety guarantee.</p>
+        </div>`;
+    } catch (error) {
+      resultBox.innerHTML = `<div class="panel-card p-4 text-sm text-amber-300">${escapeHtml(error.message || 'Unable to assess this location right now.')}</div>`;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Check area risk';
     }
   }
 

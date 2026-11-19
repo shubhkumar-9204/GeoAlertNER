@@ -37,6 +37,8 @@ class GeoAlertMap {
     this.onShelterSelect = null;
     this.onOriginSelect = null;
     this.selectingOrigin = false;
+    this.selectingRiskLocation = false;
+    this.onRiskLocationSelect = null;
   }
 
   init(containerId = 'map-container') {
@@ -87,12 +89,12 @@ class GeoAlertMap {
       maxZoom: 17
     });
 
-    // Default to darkTiles or fallback to OSM
-    darkTiles.addTo(this.map);
+    // Use OpenStreetMap as the default base layer; it does not require an API key.
+    osmStandard.addTo(this.map);
 
     // Layer Switcher
     L.control.layers({
-      'Dark Cyber Radar': darkTiles,
+      'Dark Map': darkTiles,
       'OpenStreetMap Standard': osmStandard,
       'Satellite Imagery': satTiles,
       'Topographic Terrain': topoTiles
@@ -107,7 +109,11 @@ class GeoAlertMap {
 
     // Map click handler for origin selection
     this.map.on('click', (e) => {
-      if (this.selectingOrigin && this.onOriginSelect) {
+      if (this.selectingRiskLocation && this.onRiskLocationSelect) {
+        this.setUserLocation(e.latlng.lat, e.latlng.lng);
+        this.onRiskLocationSelect(e.latlng.lat, e.latlng.lng);
+        this.selectingRiskLocation = false;
+      } else if (this.selectingOrigin && this.onOriginSelect) {
         this.setUserLocation(e.latlng.lat, e.latlng.lng);
         this.onOriginSelect(e.latlng.lat, e.latlng.lng);
         this.selectingOrigin = false;

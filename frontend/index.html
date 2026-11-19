@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoAlertNER | AI-Driven Disaster Early Warning & Evacuation System</title>
+  <title>GeoAlertNER | Disaster Risk Monitoring</title>
   <meta name="description"
-    content="Real-time environmental risk scoring, hazard-aware evacuation routing, and IoT telemetry for the North Eastern Region hilly terrain .">
+    content="Area-level hazard assessment, weather information, citizen reports and evacuation support for North Eastern India.">
 
   <!-- PWA Web App Manifest & Metadata -->
   <link rel="manifest" href="manifest.json">
@@ -45,9 +45,9 @@
           <span class="icon">📊</span>
           <span data-i18n="nav_dashboard">Live Dashboard</span>
         </button>
-        <button class="nav-btn" data-view="map">
+        <button class="nav-btn" data-view="dashboard">
           <span class="icon">🗺️</span>
-          <span data-i18n="nav_map">Disaster Risk Map</span>
+          <span data-i18n="nav_map">Risk Map</span>
         </button>
         <button class="nav-btn" data-view="evacuation">
           <span class="icon">🧭</span>
@@ -151,12 +151,9 @@
         <div id="welcome-demo-banner" class="welcome-demo-banner">
           <div style="flex:1; min-width:0;">
             <div class="welcome-banner-badge">🚀 Live Project Demo</div>
-            <div class="welcome-banner-title">GeoAlertNER — AI Disaster Early Warning System for NER, India</div>
+            <div class="welcome-banner-title">GeoAlertNER — Disaster Risk Monitoring for North Eastern India</div>
             <div class="welcome-banner-desc">
-              This is a fully functional platform combining <strong style="color:#38bdf8">PyTorch ML hazard prediction</strong>,
-              <strong style="color:#10b981">GIS evacuation routing</strong>, <strong style="color:#a855f7">offline-first PWA</strong> reporting,
-              and role-based dashboards — built for the landslide &amp; flood-prone hills of North Eastern India.
-              Explore freely — all features work in simulation mode without login.
+              Check mapped hazard zones, assess a location using its coordinates, review weather conditions, submit local observations and explore evacuation support for the North Eastern Region.
             </div>
             <div class="welcome-quick-actions">
               <button class="btn btn-sm btn-outline-cyan" id="btn-quick-demo-citizen" style="font-size:12px;">🧑‍🌾 Try as Citizen</button>
@@ -220,6 +217,28 @@
             </div>
           </div>
         </div>
+
+        <section class="panel-card p-6 mb-6" aria-labelledby="area-risk-title">
+          <div class="panel-title mb-2" id="area-risk-title">Check risk in your area</div>
+          <p class="text-xs text-slate-400 mb-4">Enter a place name or coordinates, use your device location, or select a point on the map. Results depend on the weather and terrain data available for that location.</p>
+          <form id="area-risk-form" class="space-y-3">
+            <div class="form-group">
+              <label class="form-label" for="area-risk-place">Place, village or locality</label>
+              <input id="area-risk-place" class="form-input" type="text" placeholder="e.g. Shillong, Meghalaya">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="form-label" for="area-risk-lat">Latitude</label><input id="area-risk-lat" class="form-input" type="number" step="any" min="-90" max="90" placeholder="e.g. 25.5788"></div>
+              <div><label class="form-label" for="area-risk-lon">Longitude</label><input id="area-risk-lon" class="form-input" type="number" step="any" min="-180" max="180" placeholder="e.g. 91.8933"></div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button class="btn btn-primary" type="submit" id="btn-area-risk-check">Check area risk</button>
+              <button class="btn btn-outline-primary" type="button" id="btn-area-risk-gps">Use my location</button>
+              <button class="btn btn-outline-primary" type="button" id="btn-area-risk-map">Select on map</button>
+            </div>
+          </form>
+          <div id="area-risk-result" class="hidden mt-4" aria-live="polite"></div>
+          <p class="text-xs text-slate-400 mt-3">A low-risk result is an estimate from available inputs, not a guarantee of safety. If local authorities issue an alert, follow it. Areas without mapped coverage are not automatically considered safe.</p>
+        </section>
 
         <!-- Dashboard Main Grid: Live GIS Map + Active Alerts Drawer -->
         <div class="dashboard-main-grid">
@@ -513,79 +532,12 @@
         </div>
       </section>
 
-      <!-- VIEW 5: IOT SENSORS & SIMULATOR CONTROLLER -->
+      <!-- FUTURE FEATURE: IOT SENSOR INTEGRATION -->
       <section id="view-simulator" class="view-panel">
         <div class="panel-card p-6 mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="panel-title">
-                <span>📡</span>
-                <span>Hardware IoT Simulator Control Center</span>
-              </h3>
-              <p class="text-xs text-slate-400 mt-1">
-                Simulate real-time sensor ingestion (ESP32 / LoRaWAN nodes) to test live warning thresholds and
-                automated emergency responses.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-slate-400">Current Scenario:</span>
-              <span id="sim-current-scenario" class="badge font-mono badge-warning">MONSOON_SURGE</span>
-            </div>
-          </div>
-
-          <!-- Scenario Trigger Buttons -->
-          <div class="grid grid-cols-4 gap-3 mb-6">
-            <button class="btn btn-outline-primary btn-scenario" data-scenario="NORMAL">
-              ☀️ Normal Weather
-            </button>
-            <button class="btn btn-warning btn-scenario" data-scenario="MONSOON_SURGE">
-              🌧️ Monsoon Surge
-            </button>
-            <button class="btn btn-danger btn-scenario" data-scenario="LANDSLIDE_IMMINENT">
-              🚨 Landslide Imminent
-            </button>
-            <button class="btn btn-danger btn-scenario" data-scenario="CLOUDBURST_FLOOD">
-              🌊 Cloudburst Flash Flood
-            </button>
-          </div>
-
-          <div class="flex items-center gap-4 pt-4 border-t border-slate-800">
-            <button id="btn-sim-tick" class="btn btn-primary">
-              ⚡ Trigger 1 Simulation Tick
-            </button>
-            <button id="btn-sim-auto-toggle" class="btn btn-outline-primary">
-              ▶️ Start Live Auto Sim (5s)
-            </button>
-          </div>
-        </div>
-
-        <!-- Sensors Telemetry Data Table -->
-        <div class="panel-card overflow-hidden">
-          <div class="panel-header">
-            <div class="panel-title">
-              <span>📊</span>
-              <span>Ground Sensor Node Telemetry</span>
-            </div>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Node Code</th>
-                  <th>Location & District</th>
-                  <th>Sensor Type</th>
-                  <th>Current Reading</th>
-                  <th>Threshold Limits</th>
-                  <th>Battery</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="sensors-table-body">
-                <!-- Injected dynamically -->
-              </tbody>
-            </table>
-          </div>
+          <span class="badge badge-warning">Coming Soon</span>
+          <h3 class="panel-title mt-4">IoT Sensor Integration</h3>
+          <p class="text-sm text-slate-400 mt-2">Hardware integration with ESP32 and LoRaWAN sensor nodes is planned for a future release. Live sensor readings are not currently available in this version.</p>
         </div>
       </section>
 

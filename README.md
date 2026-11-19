@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**AI-Driven Multi-Hazard Early Warning & Evacuation System**
+**Multi-Hazard Risk Monitoring & Evacuation Support**
 *for the North Eastern Region (NER) of India*
 
 [![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Click%20Here-22c55e?style=for-the-badge)](https://geoalertner.onrender.com)
@@ -19,7 +19,7 @@
 
 ## 🎯 What Is This?
 
-**GeoAlertNER** is a production-ready, full-stack disaster management platform that provides **real-time AI-powered hazard alerts** for the landslide and flood-prone hilly terrains of India's North Eastern Region.
+**GeoAlertNER** is a disaster-risk monitoring prototype for the landslide- and flood-prone terrain of India's North Eastern Region. It brings together location-based risk assessment, weather information, mapped hazard zones, citizen reports and evacuation support.
 
 > India's NER (Assam, Meghalaya, Sikkim & 5 other states) experiences some of the world's highest rates of landslides and flash floods. Existing warning systems are fragmented, English-only, and require constant internet. **GeoAlertNER** solves this with ML hazard scoring, GIS evacuation routing, offline-first PWA reporting, and multilingual regional voice alerts.
 
@@ -37,7 +37,7 @@
 | **📢 Offline Citizen Reports (PWA)** | Reports queued to IndexedDB in zero-connectivity areas, auto-synced when signal is restored |
 | **🔊 Multilingual Voice Alerts** | Regional TTS via Web Speech API in Assamese, Bengali, Hindi & English |
 | **🔐 Role-Based Access Control** | Three-tier RBAC: `Admin`, `Field Officer`, `Citizen` — each with tailored views & permissions |
-| **📡 IoT Sensor Simulator** | Live ESP32/LoRaWAN sensor simulation with configurable disaster scenarios (Monsoon Surge, etc.) |
+| **📡 IoT Sensor Integration** | Planned for a future release; physical ESP32/LoRaWAN hardware is not connected in the current version |
 | **⚡ 14+ REST API Endpoints** | Full FastAPI backend with Pydantic v2 validation, JWT auth, and async-ready design |
 
 ---
