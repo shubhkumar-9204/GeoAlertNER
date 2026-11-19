@@ -45,7 +45,15 @@ class GeoAlertMap {
     if (this.map) return;
 
     if (typeof L === 'undefined') {
-      console.warn('[Map] Leaflet (L) not yet loaded, retrying in 300ms...');
+      const container = document.getElementById(containerId);
+      if (window.__leafletLoadFailed) {
+        if (container) {
+          container.innerHTML = '<div class="map-load-error" role="status"><strong>Map library could not load.</strong><br>Please check your internet connection or network restrictions and reopen the map.</div>';
+        }
+        console.error('[Map] Leaflet failed to load from all configured CDNs.');
+        return;
+      }
+      console.info('[Map] Waiting for Leaflet library...');
       setTimeout(() => this.init(containerId), 300);
       return;
     }
