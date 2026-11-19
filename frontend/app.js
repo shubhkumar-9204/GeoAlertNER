@@ -1127,7 +1127,9 @@ class GeoAlertApp {
     resultBox.textContent = 'Searching Indian locations…';
 
     try {
-      if ((!Number.isFinite(lat) || !Number.isFinite(lon)) && placeInput.value.trim()) {
+      // A new place-name search must override coordinates filled by the previous search.
+      // Leave the place field empty when the user wants to assess manually entered coordinates.
+      if (placeInput.value.trim()) {
         const place = await this.geocodeIndiaPlace(placeInput.value);
         lat = place.lat;
         lon = place.lon;
