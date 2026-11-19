@@ -1606,3 +1606,12 @@ h6 {
   from { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
   to { box-shadow: 0 0 30px rgba(56, 189, 248, 0.85); }
 }
+
+/* Citizen area risk checker */
+#area-risk-form .form-group { margin-bottom: 0; }
+#area-risk-result .panel-card { background: var(--bg-card); }
+#area-risk-result .badge { white-space: nowrap; }
+@media (max-width: 640px) {
+  #area-risk-form .grid-cols-2 { grid-template-columns: 1fr; }
+  #area-risk-form .btn { width: 100%; }
+}
