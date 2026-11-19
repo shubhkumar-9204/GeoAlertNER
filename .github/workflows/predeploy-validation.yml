@@ -1,0 +1,28 @@
+name: Pre-deploy validation
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip starlette pytest
+      - name: Python syntax check
+        run: python -m compileall -q backend
+      - name: CSP geocoder regression test
+        run: python -m pytest -q tests/test_geocoding_csp.py
+      - name: JavaScript syntax checks
+        shell: bash
+        run: |
+          node --check frontend/bundle.js
+          node --input-type=module --check < frontend/app.js
