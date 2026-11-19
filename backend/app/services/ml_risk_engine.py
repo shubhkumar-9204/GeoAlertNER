@@ -184,7 +184,9 @@ class MLRiskEngine:
                 "soil_moisture": soil_moisture,
                 "slope_degrees": slope,
                 "elevation_m": elevation,
-                "intensity": weather.rain_intensity_level
+                "intensity": weather.rain_intensity_level,
+                "is_live_data": weather.is_live_data,
+                "data_source": weather.data_source
             },
             action_recommendation=action,
             mitigation_actions=mitigations
