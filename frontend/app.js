@@ -1076,7 +1076,8 @@ class GeoAlertApp {
       const score = Number(result.risk_score);
       const level = String(result.risk_level || 'UNKNOWN').toUpperCase();
       const colorClass = ({ LOW: 'low', MODERATE: 'moderate', HIGH: 'high', CRITICAL: 'critical' })[level] || 'outline';
-      const isEstimate = result.source === 'CLIENT_FALLBACK';
+      const weatherIsLive = result.weather_summary?.is_live_data !== false;
+      const dataSource = result.weather_summary?.data_source || 'Source not reported by the service';
       const placeLabel = placeInput.value.trim() || 'Selected coordinates';
       resultBox.innerHTML = `
         <div class="panel-card p-4">
@@ -1085,7 +1086,7 @@ class GeoAlertApp {
             <span class="badge badge-${colorClass}">${Number.isFinite(score) ? score.toFixed(1) : '—'} / 100</span>
           </div>
           <p class="text-sm mt-3">${escapeHtml(result.action_recommendation || 'Review local conditions and official advisories.')}</p>
-          <p class="text-xs text-slate-400 mt-3">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)} · ${isEstimate ? 'Local estimate only — live assessment service unavailable.' : 'Assessment returned by the connected risk service.'}</p>
+          <p class="text-xs text-slate-400 mt-3">Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)} · ${weatherIsLive ? 'Weather data: live feed (' + dataSource + ').' : 'Weather data: offline fallback (' + dataSource + '). Treat this result as indicative only.'}</p>
           <p class="text-xs text-slate-400 mt-2">This point assessment does not mean every nearby street or village has been mapped. A low score is not a safety guarantee.</p>
         </div>`;
     } catch (error) {
