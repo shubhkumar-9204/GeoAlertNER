@@ -1615,3 +1615,20 @@ h6 {
   #area-risk-form .grid-cols-2 { grid-template-columns: 1fr; }
   #area-risk-form .btn { width: 100%; }
 }
+
+
+/* Visible fallback when the GIS library cannot be loaded */
+.map-load-error {
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #cbd5e1;
+  text-align: center;
+  line-height: 1.7;
+  background: #0f172a;
+}
+.map-load-error strong { color: #fca5a5; font-size: 16px; }
+
