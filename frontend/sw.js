@@ -4,8 +4,8 @@
  * Caching Strategy: Network-First with Cache Fallback for APIs, Cache-First for App Shell
  */
 
-const CACHE_NAME = 'geoalertner-core-v12';
-const DATA_CACHE_NAME = 'geoalertner-data-v12';
+const CACHE_NAME = 'geoalertner-core-v13';
+const DATA_CACHE_NAME = 'geoalertner-data-v13';
 
 const STATIC_ASSETS = [
   './',
@@ -21,7 +21,9 @@ const STATIC_ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+  'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
 ];
 
 // Install Event: Cache Core App Shell
